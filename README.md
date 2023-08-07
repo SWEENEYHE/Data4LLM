@@ -1,4 +1,12 @@
 # Data4LLM
+<center>
+<img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-red?link=https%3A%2F%2Fgithub.com%2FSWEENEYHE%2FData4LLM%2Fblob%2Fmain%2FLICENSE.txt">
+
+<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.1.1-blue?link=https%3A%2F%2Fpypi.org%2Fproject%2Fdata4llm%2F0.1.1%2F">
+
+</center>
+
+
 
 ### The sample and useful data process tool for LLM finetuning now including: process for json & jsonline data and output jsonlines
 ### it runs well in million number level
@@ -6,6 +14,9 @@
 ### 1.For file level
 #### (1) merge files
 merge all the jsonlines files with shuffle
+````
+pip install data4llm==0.1.1
+````
 
 ```python
 import glob

@@ -1,9 +1,9 @@
 # Data4LLM
 <div align="center"> 
-<a href="https%3A%2F%2Fgithub.com%2FSWEENEYHE%2FData4LLM%2Fblob%2Fmain%2FLICENSE.txt">
+<a href="https://github.com/SWEENEYHE/Data4LLM/blob/main/LICENSE.txt">
 <img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-green">
 </a>
-<a href="https%3A%2F%2Fpypi.org%2Fproject%2Fdata4llm%2F0.1.1%2F">
+<a href="https://pypi.org/project/data4llm/0.1.1/">
 <img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.1.1-blue">
 </a>
 </div>

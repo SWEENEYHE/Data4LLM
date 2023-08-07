@@ -10,14 +10,14 @@
 
 ### The sample and useful data process tool for LLM finetuning now including: process for json & jsonline data and output jsonlines
 ### it runs well in million number level
+## install
+```
+pip install data4llm==0.1.1
+```
 ## API
 ### 1.For file level
 #### (1) merge files
 merge all the jsonlines files with shuffle
-````
-pip install data4llm==0.1.1
-````
-
 ```python
 import glob
 from data4llm import Data4LLM

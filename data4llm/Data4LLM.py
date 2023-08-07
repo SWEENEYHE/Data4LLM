@@ -77,8 +77,10 @@ class Data4LLM:
 
     @classmethod
     def __get_simhash__(cls, text, stopwords_file="stopwords.txt", length=64):
-        # 1. 分词和去停用词
-        # 1. 加载停用词
+        path = os.path.abspath(__file__)
+        dir = os.path.dirname(path)
+        stopwords_file = dir+os.sep+stopwords_file
+        # 分词和停用词
         stopwords = set()
         with open(stopwords_file, 'r', encoding='utf-8') as f:
             for line in f:
@@ -124,6 +126,14 @@ class Data4LLM:
 
     @classmethod
     def process_property(cls, file_input, file_output, process_fun, max_row_limit=1000, json=None):
+        '''
+        process_property: process the json row one by one, including: rename property, remove property, process content(remove chars, replace chars)
+        :param file_input: input file path
+        :param file_output: output file path
+        :param process_fun: process function
+        :param max_row_limit: default=1000, every step to write file and max data num in memory
+        :param json: default=None, it determines json or jsonline, or True/False
+        '''
         reader, _, process_fun = cls.__preprocess__(file_input, process_fun, json)
         writer = jsonlines.open(file_output, mode="a")
 
@@ -194,7 +204,7 @@ class Data4LLM:
         # shuffle
         random.shuffle(buffer)
         writer.write_all(buffer)
-
+        writer.close()
 
     '''
         1.3 remove duplicate data
@@ -354,13 +364,10 @@ class Data4LLM:
                 # 遍历行
                 for i, row in enumerate(reader):
                     if i % max_row_limit == 0:
-                        writer.write_all(buffer)
-                        buffer.clear()
+                        cls.__save_and_clear__(writer,buffer)
                     buffer.append(row)
-                # 结束
-                writer.write_all(buffer)
-                buffer.clear()
-                writer.close()
+            # 结束
+            cls.__save_and_clear__(writer, buffer, close=True)
         else:
             rows = []
             # 同时打开多个文件
@@ -433,34 +440,15 @@ class Data4LLM:
 
 class F:
     @classmethod
-    def rename(cls, row, map: dict[str:str]):
-        for k, v in map.items():
-            if v in row:
-                row[v] = row[k]
-                row.pop(k)
+    def rename(cls, row, mapping: dict[str:str]) -> None:
+        for old_k, new_k in mapping.items():
+            if old_k in row:
+                row[new_k] = row.pop(old_k)
 
     @classmethod
-    def replace(cls, row, pattern, repl, property=None):
+    def replace(cls, row, pattern, repl, property=None) -> None:
         if property is None:
             property = row.keys()
 
         for k in property:
             row[k] = re.sub(pattern, repl, row[k])
-
-
-if __name__ == "__main__":
-    # Data4LLM.remove_duplicate(file_input="data/01_deal_llama_data.jsonl",
-    #                           file_output="result/rm_01_deal_llama_data.jsonl", ratio=1, max_row_limit=1000)
-    def process_fn(row: dict[str:str]):
-        # F.rename(row, {'input': 'prompt', 'output': 'chosen'})
-        F.replace(row, "#", "")
-        F.replace(row, "https?://\S+", "")
-        F.rename(row, {"input":"prompt","output":"chosen"})
-        # row['prompt'] = re.sub('apple', "banana", row['input'])
-        # row.pop('input')
-        return row
-
-
-    Data4LLM.show_example(file_input="data/test.jsonl", process_fun=process_fn)
-    # Data4LLM.process_property(file_input="data/01_deal_llama_data.jsonl",
-    # file_output="data/pp_01_deal_llama_data.jsonl", process_fun=process_fn)

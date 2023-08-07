@@ -1,0 +1,5 @@
+jsonlines~=3.1.0
+pandas~=2.0.2
+jieba~=0.42.1
+tqdm~=4.65.0
+simhash~=2.1.2

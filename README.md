@@ -1,7 +1,11 @@
 # Data4LLM
 <div align="center"> 
-<img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-green?link=https%3A%2F%2Fgithub.com%2FSWEENEYHE%2FData4LLM%2Fblob%2Fmain%2FLICENSE.txt">
-<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.1.1-blue?link=https%3A%2F%2Fpypi.org%2Fproject%2Fdata4llm%2F0.1.1%2F">
+<a href="https%3A%2F%2Fgithub.com%2FSWEENEYHE%2FData4LLM%2Fblob%2Fmain%2FLICENSE.txt">
+<img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-green">
+</a>
+<a href="https%3A%2F%2Fpypi.org%2Fproject%2Fdata4llm%2F0.1.1%2F">
+<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.1.1-blue">
+</a>
 </div>
 
 ### The sample and useful data process tool for LLM finetuning now including: process for json & jsonline data and output jsonlines

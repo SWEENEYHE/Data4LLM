@@ -12,7 +12,7 @@
 ### it runs well in million number level
 ## install
 ```
-pip install data4llm==0.1.1
+pip install data4llm
 ```
 ## API
 ### 1.For file level

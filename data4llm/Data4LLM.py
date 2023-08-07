@@ -431,11 +431,8 @@ class Data4LLM:
         random.shuffle(train_buffer)
         random.shuffle(test_buffer)
         # save and close
-        train_writer.write_all()
-        train_writer.close()
-
-        test_writer.write_all(test_buffer)
-        test_writer.close()
+        cls.__save_and_clear__(train_writer, train_buffer, close=True)
+        cls.__save_and_clear__(test_writer, test_buffer, close=True)
 
 
 class F:

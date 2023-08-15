@@ -148,7 +148,9 @@ class SFT:
         i = 0
         for item in tqdm(reader, position=0):
             try:
-                items.append(process_fun(item))
+                item = process_fun(item)
+                if item is not None:
+                    items.append(item)
                 # 达到最大内存处理数，则写入文件
                 i += 1
                 if i % max_row_limit == 0:
@@ -446,9 +448,24 @@ class F:
 
         for k in property:
             row[k] = re.sub(pattern, repl, row[k])
-
     @classmethod
-    def getSize(cls, file_input):
+    def get_length(cls, row, property=None) -> int:
+        '''
+        get length of the json
+        :param row:
+        :param property:
+        :return:
+        '''
+        if property is None:
+            item = "".join(row.values())
+        else:
+            item = ""
+            for k, v in row.items():
+                if k in property:
+                    item += v
+        return len(item)
+    @classmethod
+    def get_count(cls, file_input):
         """
         get the sample number of a file
         :param file_input:

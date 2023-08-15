@@ -3,7 +3,7 @@
 <a href="https://github.com/SWEENEYHE/Data4LLM/blob/main/LICENSE.txt">
 <img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-green">
 </a>
-<a href="https://pypi.org/project/data4llm/0.1.1/">
+<a href="https://pypi.org/project/data4llm/0.2.1/">
 <img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.1.1-blue">
 </a>
 </div>
@@ -135,6 +135,16 @@ def process_fn(row: dict[str:str]):
 
 SFT.process_property(file_input="data/test.txt", file_output="result/result_test.jsonl", process_fun=process_fn)
 ```
+you can also filter some instruction by it's length or other factors, for those you don't need just return `None`
+```python
+from data4llm.Data4LLM import SFT,F
+def fn(row):
+    length = F.get_length(row) #caculate the length of the json(only value) or part of json
+    if length>2048 or length<10:
+        return None
+    return row
+SFT.process_property(file_input="test.jsonl",file_output="after.jsonl",process_fun=fn)
+```
 
 ````
 def process_property(cls, file_input, file_output, process_fun, max_row_limit=1000, json=None):
@@ -241,7 +251,7 @@ from data4llm.Data4LLM import F
 ### (1) getSize
 get the sample number of a file
 ```python
-def getSize(cls, file_input):
+def get_count(cls, file_input):
     """
     get the sample number of a file
     :param file_input:
@@ -251,8 +261,11 @@ def getSize(cls, file_input):
 
 ### (2) property process function in SFT
 `rename()` : rename the property of every json \
-`repalce()`: replace the chars in a json or a property in the json
+`repalce()`: replace the chars in a json or a property in the json \
+`get_length()`: get the length of the json (only values) of part of json (specify the property like "chosen" only {"chosen"})
 ```python
 def rename(cls, row, mapping: dict[str:str]) -> None
 def replace(cls, row, pattern, repl, property=None) -> None
+def get_count(cls, file_input) -> int
+def get_length(cls, row, property=None) -> int:
 ```

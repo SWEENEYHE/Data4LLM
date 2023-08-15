@@ -4,7 +4,7 @@
 <img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-green">
 </a>
 <a href="https://pypi.org/project/data4llm/0.1.1/">
-<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.1.1-blue">
+<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.2.1-blue">
 </a>
 </div>
 

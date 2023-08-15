@@ -44,7 +44,7 @@ def setLogger(fileName):
 '''
 
 
-class Data4LLM:
+class SFT:
 
     # 封装保存过程
     @classmethod
@@ -60,8 +60,9 @@ class Data4LLM:
 
     @classmethod
     def __preprocess__(cls, file_input, process_fun, json=None):
+        postfix = os.path.splitext(file_input)
         if json is None:
-            json = file_input.split(".")[-1] == "json"
+            json = postfix == "json"
             # 如果是json
         if json:
             reader = pd.read_json(file_input).iterrows()
@@ -79,7 +80,7 @@ class Data4LLM:
     def __get_simhash__(cls, text, stopwords_file="stopwords.txt", length=64):
         path = os.path.abspath(__file__)
         dir = os.path.dirname(path)
-        stopwords_file = dir+os.sep+stopwords_file
+        stopwords_file = dir + os.sep + stopwords_file
         # 分词和停用词
         stopwords = set()
         with open(stopwords_file, 'r', encoding='utf-8') as f:
@@ -155,7 +156,7 @@ class Data4LLM:
             except Exception as e:
                 cls.__save_and_clear__(writer, items)
                 print(f"Error: encounter an error when dealing with the row {i + 1} : {e}")
-                traceback.print_exception()
+                traceback.print_exception(type(e), e, e.__traceback__)
                 break
         # 最后一次写文件
         cls.__save_and_clear__(writer, items, close=True)
@@ -355,7 +356,7 @@ class Data4LLM:
         :param max_row_limit:
         :return:
         '''
-        writer = jsonlines.open(file_output, mode="a")
+        writer = jsonlines.open(file_output, mode="w")
 
         if not shuffle:
             for file in files:
@@ -364,7 +365,7 @@ class Data4LLM:
                 # 遍历行
                 for i, row in enumerate(reader):
                     if i % max_row_limit == 0:
-                        cls.__save_and_clear__(writer,buffer)
+                        cls.__save_and_clear__(writer, buffer)
                     buffer.append(row)
             # 结束
             cls.__save_and_clear__(writer, buffer, close=True)
@@ -387,10 +388,6 @@ class Data4LLM:
                     except EOFError:
                         # EOF表明到达终点，从池子里移除该reader
                         readers.remove(reader)
-
-                # 每max_row_limit条数据就写一次磁盘
-                if len(rows) % max_row_limit == 0:
-                    cls.__save_and_clear__(writer, rows)
             # 保存并关闭
             cls.__save_and_clear__(writer, rows, close=True)
             # shuffle
@@ -449,3 +446,131 @@ class F:
 
         for k in property:
             row[k] = re.sub(pattern, repl, row[k])
+
+    @classmethod
+    def getSize(cls, file_input):
+        """
+        get the sample number of a file
+        :param file_input:
+        :return:
+        """
+
+        _, postfix = os.path.splitext(file_input)
+        allow_postfix = {".jsonl", ".json", ".txt"}
+        assert postfix in allow_postfix, f"The postfix  {postfix} is not supported, expect {allow_postfix}"
+
+        if postfix == ".jsonl":
+            reader = jsonlines.open(file_input)
+        elif postfix == ".json":
+            reader = pd.read_json(file_input).iterrows()
+        elif postfix == ".txt":
+            reader = open(file_input, mode="r")
+
+        num = 0
+        for row in reader:
+            num += 1
+        reader.close()
+        return num
+
+class PT:
+    @classmethod
+    def show_properties(cls, files, s=0, e=5):
+        '''
+        show the json structure
+        :param files:
+        :param s:
+        :param e:
+        :return:
+        '''
+        for i, file in enumerate(files):
+            if i < s:
+                continue
+            elif i > e:
+                break
+            print(f"====={i}=====")
+            reader = pd.read_json(file)
+            dic = reader.to_dict()
+            print(dic)
+
+    @classmethod
+    def parse_pages(cls, files, process_fun, output_dir):
+        '''
+        parse the semi structure json and parse all the token needed together fot PT
+        :param files:
+        :param process_fun:
+        :param output_dir:
+        :return:
+        '''
+        for file in tqdm(files):
+            try:
+                # 读取数据
+                reader = pd.read_json(file)
+                dic = reader.to_dict()
+                # 处理数据
+                result = process_fun(dic)
+                # 写文件
+                path, filename = os.path.split(file)
+                filename, _ = os.path.splitext(filename)
+                dir_filename = os.path.join(output_dir, filename)
+                with open(dir_filename + ".txt", mode='w') as f:
+                    f.write(result)
+            except Exception as e:
+                print(f"====={file}======")
+                traceback.print_exception(type(e), e, e.__traceback__)
+                print(e.args)
+
+    @classmethod
+    def merge_files(cls, files, output_file="merge_file.txt", max_limit_num=100):
+        '''
+        merge all the txt files
+        :param files:
+        :param output_file:
+        :param max_limit_num:
+        :return:
+        '''
+        # 按长度切分列表
+        def split_list_by_length(lst, length):
+            return [lst[i:i + length] for i in range(0, len(lst), length)]
+
+        split_files = split_list_by_length(files, max_limit_num)
+        with open(output_file, mode="a") as writer:
+            for split_file in tqdm(split_files):
+                contents = []
+                for file in split_file:
+                    with open(file, mode="r") as reader:
+                        content = reader.readlines()
+                    contents += content
+                random.shuffle(contents)
+                writer.writelines(contents)
+
+    @classmethod
+    def split_train_test(cls, file_input, train_test_ratio, file_train_output="train.txt", file_test_output="test.txt"):
+        '''
+        split a file into train and test files
+        :param file_input:
+        :param train_test_ratio:
+        :param file_train_output:
+        :param file_test_output:
+        :return:
+        '''
+        with open(file_input, mode="r") as reader:
+            buffer = reader.readlines()
+
+        row_num = len(buffer)
+        # shuffle
+        random.shuffle(buffer)
+        # count length
+        train_len = int(row_num * train_test_ratio)
+        # split
+        train_buffer = buffer[:train_len]
+        test_buffer = buffer[train_len:]
+        # shuffle
+        random.shuffle(train_buffer)
+        random.shuffle(test_buffer)
+
+        with open(file_train_output, mode="w") as writer1:
+            writer1.writelines(train_buffer)
+
+        with open(file_test_output, mode="w") as writer2:
+            writer2.writelines(test_buffer)
+

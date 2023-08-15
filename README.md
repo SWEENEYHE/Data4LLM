@@ -3,8 +3,8 @@
 <a href="https://github.com/SWEENEYHE/Data4LLM/blob/main/LICENSE.txt">
 <img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-green">
 </a>
-<a href="https://pypi.org/project/data4llm/0.2.1/">
-<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.1.1-blue">
+<a href="https://pypi.org/project/data4llm/0.2.3/">
+<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.2.3-blue">
 </a>
 </div>
 
@@ -60,7 +60,7 @@ def shuffle(cls, file_input, file_output):
 #### (2) remove duplicated data
 remove duplicate data by sim_hash. There are two function `remove_duplicate_BloomFilter` and `remove_duplicate`.
 
-`remove_duplicate` : remove duplicate data by sim_hash, which removes data by bloom filter, very fast
+`remove_duplicate_BloomFilter` : remove duplicate data by sim_hash, which removes data by bloom filter, very fast
 
 ```python
 from data4llm.Data4LLM import SFT
@@ -248,7 +248,7 @@ A util class offering some useful functions
 ```python
 from data4llm.Data4LLM import F
 ```
-### (1) getSize
+### (1) get_count
 get the sample number of a file
 ```python
 def get_count(cls, file_input):
@@ -266,6 +266,7 @@ def get_count(cls, file_input):
 ```python
 def rename(cls, row, mapping: dict[str:str]) -> None
 def replace(cls, row, pattern, repl, property=None) -> None
-def get_count(cls, file_input) -> int
 def get_length(cls, row, property=None) -> int:
 ```
+
+

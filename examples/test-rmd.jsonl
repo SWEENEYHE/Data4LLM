@@ -1,0 +1,7 @@
+{"input": "What is the capital of France?", "output": "Paris"}
+{"input": "Who was the first president of the United States?", "output": "George Washington"}
+{"input": "Who invented the light bulb?", "output": "Thomas Edison"}
+{"input": "What is the chemical symbol for gold?", "output": "Au"}
+{"input": "要求GPT模型对给定的标题生成新闻文章。\n标题: “特斯拉在美国建设新工厂”\n输入内容（提供的附加信息，可供模型参考）：美国土地市场现状、特斯拉历史、环保问题和未来发展趋势。", "output": "电动汽车制造商特斯拉宣布在美国建设新工厂。此举得益于美国土地市场的稳步增长，也是特斯拉历史上的重要一步。在环保问题和未来发展趋势的推动下，特斯拉已经成为新能源汽车业的领导者。新工厂将进一步促进特斯拉的发展，并开启新的机会。"}
+{"input": "生成一个包含以下信息的文章摘要：指定文章的标题、作者、发布日期、主要内容并限制输出长度不超过三句话。\\n\n\\n文章标题:\"如何掌握一门新语言的技巧\"\\n作者:\"约翰·史密斯\"\\n发布日期:\"2021年5月20日\"\\n主要内容:\"学习一门新语言需要正确的方法。这包括设置可行的学习目标、练习语言技能，例如听、说、读、写，并在实际情境中使用语言。\"\\n", "output": "约翰·史密斯在2021年5月20日发布文章《如何掌握一门新语言的技巧》中指出，学习一门新语言需要正确的方法。正确的方法包括设置可行的学习目标、练习语言技能，并在实际情境中使用语言。"}
+{"input": "识别并更正英文句子中的语法错误。\n英文句子: She goes to office by cab everyday.", "output": "\n\nCorrected sentence: She goes to the office by cab every day.\n\nThe corrections made are:\n- \"the\" has been added before \"office\" as it refers to a specific office.\n- \"every day\" has been written as two words instead of one word \"everyday\"."}

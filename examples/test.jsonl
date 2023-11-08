@@ -1,0 +1,18 @@
+{"input": "What is the capital of France?", "output": "Paris"}
+{"input": "Who was the first president of the United States?",  "output": "George Washington"}
+{"input": "What is the largest city in Canada?",  "output": "Toronto"}
+{"input": "What is the currency of Japan?",  "output": "Japanese yen"}
+{"input": "Who painted the Mona Lisa?",  "output": "Leonardo da Vinci"}
+{"input": "What is the highest mountain in Africa?",  "output": "Mount Kilimanjaro"}
+{"input": "Who wrote the Harry Potter series?",  "output": "J.K. Rowling"}
+{"input": "What is the smallest continent in the world?",  "output": "Australia"}
+{"input": "Who invented the light bulb?",  "output": "Thomas Edison"}
+{"input": "What is the chemical symbol for gold?",  "output": "Au"}
+{"input": "要求GPT模型对给定的标题生成新闻文章。\n标题: “特斯拉在美国建设新工厂”\n输入内容（提供的附加信息，可供模型参考）：美国土地市场现状、特斯拉历史、环保问题和未来发展趋势。", "output": "电动汽车制造商特斯拉宣布在美国建设新工厂。此举得益于美国土地市场的稳步增长，也是特斯拉历史上的重要一步。在环保问题和未来发展趋势的推动下，特斯拉已经成为新能源汽车业的领导者。新工厂将进一步促进特斯拉的发展，并开启新的机会。"}
+{"input": "给定一组数字，请找出其中的最大值和最小值。\n数字列表:  1, 5, 9, 2, 7, 4, 8, 3", "output": "最大值为9，最小值为1。"}
+{"input": "生成一个包含以下信息的文章摘要：指定文章的标题、作者、发布日期、主要内容并限制输出长度不超过三句话。\\n\n\\n文章标题:\"如何掌握一门新语言的技巧\"\\n作者:\"约翰·史密斯\"\\n发布日期:\"2021年5月20日\"\\n主要内容:\"学习一门新语言需要正确的方法。这包括设置可行的学习目标、练习语言技能，例如听、说、读、写，并在实际情境中使用语言。\"\\n", "output": "约翰·史密斯在2021年5月20日发布文章《如何掌握一门新语言的技巧》中指出，学习一门新语言需要正确的方法。正确的方法包括设置可行的学习目标、练习语言技能，并在实际情境中使用语言。"}
+{"input": "为一位新雇员编写欢迎邮件，并包括他们需要了解的公司信息。\\n\n\\n- 新员工姓名：张三\\n- 入职日期：2021年6月1日\\n- 公司介绍：公司专注于生产优质的软件和硬件产品，致力于提供最佳客户服务。\\n- 公司使命：为客户提供高品质的产品和服务，并成为行业领先企业。\\n", "output": "亲爱的张三，\n\n很高兴欢迎您加入我们的团队！作为新成员，您的入职日期是2021年6月1日，我们非常期待您的到来，并希望您能与我们一起开创更美好的未来。\n\n我们的公司专注于生产高质量的软件和硬件产品，同时致力于提供最佳的客户服务。我们的使命是为客户提供高品质的产品和服务，并成为行业领先企业。\n\n在您的入职期间，我们将会提供必要的培训和支持，以确保您能够尽快地适应新环境，并为我们的使命做出贡献。如果您有任何问题或需求，请随时与您的直属主管或人力资源部门联系。\n\n祝您在公司工作愉快！\n\n谢谢，\n\n[公司名称]"}
+{"input": "描述一种你最近学会的新技能，包括技能名称、实现技能所需的步骤和该技能的应用场景。\\n\n技能名称: <技能名称>\\n", "output": "抱歉，我无法回答这个问题。请提供一个具体的技能名称，以便我能为您提供准确和详细的答案。"}
+{"input": "为一家软件公司编写一个50页的质量保证计划和测试方案，用于保证软件产品的质量和可靠性。\n- 公司名称：ABC软件有限公司。\n- 产品类型：企业管理软件。\n- 计划需要包括：测试范围、测试目标、测试策略、测试时间表和缺陷追踪方法等方面。", "output": "\n\n很抱歉，我无法为您编写50页的质量保证计划和测试方案。这是一项需要定义详细机制和步骤的任务，需要考虑多种方面，包括测试方法、测试阶段、测试计划和测试结果分析等多个方面。\n\n建议您向软件测试专家或公司咨询，寻求他们的帮助来完成这项任务。同时，您可以查阅一些相关资料或书籍，以了解如何制定有效的软件测试计划和方案。"}
+{"input": "给定两个数字，计算它们的平均值。\n数字: 25, 36", "output": "平均值为30.5。"}
+{"input": "识别并更正英文句子中的语法错误。\n英文句子: She goes to office by cab everyday.", "output": "\n\nCorrected sentence: She goes to the office by cab every day.\n\nThe corrections made are:\n- \"the\" has been added before \"office\" as it refers to a specific office.\n- \"every day\" has been written as two words instead of one word \"everyday\"."}

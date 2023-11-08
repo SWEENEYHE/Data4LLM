@@ -1,0 +1,8 @@
+{"input": "What is the capital of France?", "output": "Paris"}
+{"input": "What is the largest city in Canada?", "output": "Toronto"}
+{"input": "What is the currency of Japan?", "output": "Japanese yen"}
+{"input": "Who painted the Mona Lisa?", "output": "Leonardo da Vinci"}
+{"input": "Who wrote the Harry Potter series?", "output": "J.K. Rowling"}
+{"input": "Who invented the light bulb?", "output": "Thomas Edison"}
+{"input": "What is the chemical symbol for gold?", "output": "Au"}
+{"input": "给定两个数字，计算它们的平均值。\n数字: 25, 36", "output": "平均值为30.5。"}

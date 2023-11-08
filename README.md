@@ -3,13 +3,14 @@
 <a href="https://github.com/SWEENEYHE/Data4LLM/blob/main/LICENSE.txt">
 <img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-green">
 </a>
-<a href="https://pypi.org/project/data4llm/0.2.3/">
-<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.2.3-blue">
+<a href="https://pypi.org/project/data4llm/0.3.0/">
+<img alt="Static Badge" src="https://img.shields.io/badge/pypi-0.3.0-blue">
 </a>
 </div>
 
-### The sample and useful data process tool for LLM finetuning now including: process for json & jsonline data and output jsonlines
-### it runs well in million number level
+### The simple and useful data process tool for LLM `data4llm`
+`data4llm` is a json & jsonline process tool, which runs well in millions number level, which facilitates the construction procession of millions of data to continue-pretrain and finetune your LLM. The current framework show below:
+![data4llm.png](imgs/data4llm.png)
 # install
 ```
 pip install data4llm
@@ -35,15 +36,15 @@ Data4LLM.merge_files(files=files)
 ```python
 from data4llm.Data4LLM import SFT
 
-SFT.split_train_test(file_input="data/test.json", train_test_ratio=3 / 5)
+SFT.split_train_test(file_input="data/test.jsonl", train_ratio=3 / 5)
 ```
 ### 2. For sample level
-Every sample is a json with key-value form dict[str:str],like
+Every sample is a json with key-value like dict[str:str], for example:
 ````
  {"input":"hello!","output":"Hi, I'm an AI assistant, how can I help you?"}
 ````
 #### (1) shuffle
-shuffle all the json in a file, it doesn't optimize the memory usage now, requiring to load all the data to memory
+shuffle all the samples in a file, it doesn't optimize the memory usage now, requiring to load all the data to memory in one time
 
 ```python
 from data4llm.Data4LLM import SFT
@@ -64,7 +65,7 @@ remove duplicate data by sim_hash. There are two function `remove_duplicate_Bloo
 
 ```python
 from data4llm.Data4LLM import SFT
-SFT.remove_duplicate_BloomFilter(file_input="data/test.json", file_output="result/rm_dup_test.json", length=64)
+SFT.remove_duplicate_BloomFilter(file_input="data/test.jsonl", file_output="result/rm_dup_test.json", length=64)
 ```
 ````
 def remove_duplicate_BloomFilter(cls, file_input, file_output, max_row_limit=1000, skip_hash=False, length=64,
@@ -85,7 +86,7 @@ def remove_duplicate_BloomFilter(cls, file_input, file_output, max_row_limit=100
 ```python
 from data4llm.Data4LLM import SFT
 
-SFT.remove_duplicate(file_input="data/test.json", file_output="result/rm_dup_test.json", length=64)
+SFT.remove_duplicate(file_input="data/test.jsonl", file_output="result/rm_dup_test.json", length=64)
 ```
 ````
 
@@ -102,67 +103,77 @@ def remove_duplicate(cls, file_input, file_output, ratio=1, max_row_limit=1000, 
     :return: result data number , removed data number
 ````
 
-#### (3) process property in json
-process the json row one by one, including: rename property, remove property, process content(remove chars, replace chars)
+#### (3) apply
+The most powerful function in this project, you can apply any process rule by it ,including: `process property`(`rename`, `remove`, `add`), `process content`(`remove chars`, `replace chars`), `filter` sample by some rules, `derived` serval samples from a sample.
+There are three typical ways: `I.filter`, `II.process attributes`, `III.from one to serval`:
+#### I. filtered by length
+Filter sample by returning `None`
+![I.filter.png](imgs/I.filter.png)
 
+```python
+def fn(row: dict[str:str]) -> dict[str:str]:
+    if F.len(row) > 1000:
+        return None
+    return row
+
+SFT.apply(file_input="data/test.txt", file_output="result/result_test.jsonl", fn=fn)
+```
+#### II. concat two properties into one
+apply process to every sample
+![II.concat two into one.png](imgs%2FII.concat%20two%20into%20one.png)
 ```python
 from data4llm.Data4LLM import SFT, F
 
-
-# define a process function to process every json row
-def process_fn(row: dict[str:str]):
-    '''
-        row is a json in dict[str:str] form, you can process it with dict function by yourself, we also define some useful functions in Data2LLM.F
-        replace chars
-    '''
-    # details in F section
-    F.replace(row, "#", "")   # use regrex to replace all the '#' to '' / remove all the '#'
-    F.replace(row, "https?://\S+", "")  # use reg to remove url
-    '''
-        rename chas
-        rename json property ,'input' to 'prompt', 'output' to 'chosen'
-        {"input":"hello!","output":"Hi, I'm an AI assistant, how can I help you?"}=>{"prompt":"hello!","chosen":"Hi, I'm an AI assistant, how can I help you?"}
-    '''
-    F.rename(row, {"input": "prompt", "output": "chosen"})
-    '''
-        you can also process the row: dict[str:str] by yourself:
-        row['key']='value'
-        row['key'] = row.pop('key1')+row.pop('key2')
-        ...
-    '''
+def fn(row: dict[str:str]) -> dict[str:str]:
+    row['input'] = row['instruction']+row['prompt']
+    row.pop("instruction")
+    row.pop("prompt")
     return row
 
 
-SFT.process_property(file_input="data/test.txt", file_output="result/result_test.jsonl", process_fun=process_fn)
+SFT.apply(file_input="data/test.txt", file_output="result/result_test.jsonl", fn=fn)
 ```
-you can also filter some instruction by it's length or other factors, for those you don't need just return `None`
+
+#### III. from one to several
+Generate more samples from one sample by returning a list consisting of dict
+![one2more.png](imgs/III.one2more.png)
+
 ```python
-from data4llm.Data4LLM import SFT,F
-def fn(row):
-    length = F.get_length(row) #caculate the length of the json(only value) or part of json
-    if length>2048 or length<10:
-        return None
-    return row
-SFT.process_property(file_input="test.jsonl",file_output="after.jsonl",process_fun=fn)
-```
+def fn(row: dict[str:str]) -> List[dict[str:str]]:
+    arrs = row['input'].split(";")[:-1]
+    rows = []
+    temp_str = ""
+    for i, item in enumerate(arrs):
+        if i % 2 != 0:
+            output = item.split(":")[0]
+            temp_row = {"input": temp_str + "assistant:", "output": output}
+            rows.append(temp_row)
+        else:
+            temp_str += item + ";"
+    return rows
 
+SFT.apply(file_input="data/test.txt", file_output="result/result_test.jsonl", fn=fn)
+```
+#### The apply function 
 ````
-def process_property(cls, file_input, file_output, process_fun, max_row_limit=1000, json=None):
-    process_property: process the json row one by one, including: rename property, remove property, process content(remove chars, replace chars)
+def apply(cls, file_input, file_output, fn, max_row_limit=1000, json=None):
+    apply_property: apply the json row one by one, including: rename property, remove property, apply content(remove chars, replace chars)
      file_input: input file path
      file_output: output file path
-     process_fun: process function
+     fn: apply function
      max_row_limit: default=1000, every step to write file and max data num in memory
      json: default=None, it determines json or jsonline, or True/False
 ````
 
 
 #### (4) show_example
-it is very useful to show the result before actually conduct by using show_example:
+It is very useful to show the result before actually conduct it by `show_example`:
 ```python
 from data4llm.Data4LLM import SFT
-
-SFT.show_example(file_input="data/test.txt", process_fun=process_fn)
+def fn(row):
+    row['input'] = row['input'].replace("https://www.baidu.com")
+    return row
+SFT.show_example(file_input="data/test.txt", fn=fn)
 ```
 examples:
 ````
@@ -178,15 +189,16 @@ examples:
 {'prompt': 'hello!', 'chosen': "Hi, I'm an AI assistant, how can I help you?"}
 ````
 ```
-def show_example(cls, file_input, process_fun, json=None, s=0, e=5):
+def show_example(cls, file_input, fn, json=None, s=0, e=5):
+    '''
     file_input: 
-    process_fun: 
+    fn: 
     json: if the file is json or jsonline, default None means it decided by the postfix of th file_input 
     s: default 0 the start row num
     e: default 5 the end row num
     :return: None
+    '''
 ```
-
 ## PT
 ```python
 from data4llm.Data4LLM import PT
@@ -206,18 +218,18 @@ def show_properties(cls, files, s=0, e=5):
 ```
 
 #### (2) parse_pages
-parse the semi structure json and parse all the token needed together fot PT
+parse the semi structure json and parse all the token needed together for PT
 ```python
-def parse_pages(cls, files, process_fun, output_dir):
+def parse_pages(cls, files, fn, output_dir):
         '''
         parse the semi structure json and parse all the token needed together fot PT
         :param files:
-        :param process_fun:
+        :param fn:
         :param output_dir:
         :return:
         '''
 ```
-### (3) merge_files
+#### (3) merge_files
   merge all the txt files
 ````python
 def merge_files(cls, files, output_file="merge_file.txt", max_limit_num=100):
@@ -229,7 +241,7 @@ def merge_files(cls, files, output_file="merge_file.txt", max_limit_num=100):
     :return: 
     '''
 ````
-### (4) split_train_test
+#### (4) split_train_test
 split a file into train and test files
 ```python 
 def split_train_test(cls, file_input, train_test_ratio, file_train_output="train.txt", file_test_output="test.txt"):
@@ -242,31 +254,31 @@ def split_train_test(cls, file_input, train_test_ratio, file_train_output="train
     :return: 
     '''
 ```
-
+#### (5) sample
+sample 
 ## F
-A util class offering some useful functions
+A tool class with some useful functions
 ```python
 from data4llm.Data4LLM import F
 ```
-### (1) get_count
+### (1) count
 get the sample number of a file
 ```python
-def get_count(cls, file_input):
+def count(cls, file_input):
     """
     get the sample number of a file
     :param file_input:
     :return:
     """
 ```
-
-### (2) property process function in SFT
-`rename()` : rename the property of every json \
+### (2) functions used in `apply` fn
+`rename()` : rename the property of every sample \
 `repalce()`: replace the chars in a json or a property in the json \
-`get_length()`: get the length of the json (only values) of part of json (specify the property like "chosen" only {"chosen"})
+`len()`: get the length of the json (only values) of part of json (specify the property like "chosen" only {"chosen"})
 ```python
 def rename(cls, row, mapping: dict[str:str]) -> None
 def replace(cls, row, pattern, repl, property=None) -> None
-def get_length(cls, row, property=None) -> int:
+def len(cls, row, property=None) -> int:
 ```
 
 

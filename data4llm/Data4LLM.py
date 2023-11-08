@@ -1,7 +1,10 @@
+import _io
+import json
 import logging
 import os.path
 import random
 import re
+from typing import List
 
 import jsonlines
 import pandas as pd
@@ -44,6 +47,31 @@ def setLogger(fileName):
 '''
 
 
+class WriterAdapter:
+    def __init__(self, writer):
+        type_writer = type(writer)
+        self.writer = writer
+
+        def write_all(rows):
+            json.dump(rows, writer)
+
+        if type_writer == _io.TextIOWrapper:
+            self.write_all = lambda x: write_all(x)
+            self.write = lambda x: write_all(x)
+        elif type_writer == jsonlines.Writer:
+            self.write_all = lambda x: writer.write_all(x)
+            self.write = lambda x: writer.write(x)
+
+    def write_all(self, rows):
+        self.write_all(rows)
+
+    def write(self, rows):
+        self.write(rows)
+
+    def close(self):
+        self.writer.close()
+
+
 class SFT:
 
     # 封装保存过程
@@ -77,6 +105,20 @@ class SFT:
         return reader, pre_process, process_fun
 
     @classmethod
+    def __rearprocess__(cls, file_output, json=None):
+        postfix = os.path.splitext(file_output)
+        if json is None:
+            json = postfix == "json"
+            # 如果是json
+        if json:
+            writer = open(file_output, "w")
+            # 如果是jsonline
+        else:
+            writer = jsonlines.open(file_output, "w")
+        writer = WriterAdapter(writer)
+        return writer
+
+    @classmethod
     def __get_simhash__(cls, text, stopwords_file="stopwords.txt", length=64):
         path = os.path.abspath(__file__)
         dir = os.path.dirname(path)
@@ -93,7 +135,7 @@ class SFT:
 
     # 计算所有样本的simhash值，存储到文件中
     @classmethod
-    def __simhash_all_rows__(cls, file_input, file_output=None, max_row_limit=1000, length=64):
+    def __simhash_all_rows__(cls, file_input: str, file_output=None, max_row_limit=1000, length=64):
         '''
         __simhash_all_rows__ : generate all the simhash value of the intput file and cache them to file
         :param file_input: input file path
@@ -126,16 +168,17 @@ class SFT:
     '''
 
     @classmethod
-    def process_property(cls, file_input, file_output, process_fun, max_row_limit=1000, json=None):
+    def apply(cls, file_input: str, file_output: str, fn: callable, max_row_limit=1000, json=None) -> None:
         '''
-        process_property: process the json row one by one, including: rename property, remove property, process content(remove chars, replace chars)
-        :param file_input: input file path
-        :param file_output: output file path
-        :param process_fun: process function
-        :param max_row_limit: default=1000, every step to write file and max data num in memory
-        :param json: default=None, it determines json or jsonline, or True/False
-        '''
-        reader, _, process_fun = cls.__preprocess__(file_input, process_fun, json)
+               apply: apply fn the json row one by one, including: rename property, remove property, process content(remove chars, replace chars), filter data, magnify data
+               :param fn:
+               :param file_input: input file path
+               :param file_output: output file path
+               :param process_fun: process function
+               :param max_row_limit: default=1000, every step to write file and max data num in memory
+               :param json: default=None, it determines json or jsonline, or True/False
+               '''
+        reader, _, process_fun = cls.__preprocess__(file_input, fn, json)
         writer = jsonlines.open(file_output, mode="a")
 
         # 输出文件存在且大于0字节说明已经有内容，提示先删除 ： 由于进行追加，重复生成时导致非预期的结果，且很难排查（每次打开文件查看只看top k行以为新修改的逻辑没生效）
@@ -148,9 +191,14 @@ class SFT:
         i = 0
         for item in tqdm(reader, position=0):
             try:
-                item = process_fun(item)
+                item = fn(item)
+                # 如果是list[row]类型则将其全部加入
                 if item is not None:
-                    items.append(item)
+                    if type(item) == list:
+                        items.extend(item)
+                    else:
+                        items.append(item)
+
                 # 达到最大内存处理数，则写入文件
                 i += 1
                 if i % max_row_limit == 0:
@@ -164,17 +212,18 @@ class SFT:
         cls.__save_and_clear__(writer, items, close=True)
 
     @classmethod
-    def show_example(cls, file_input, process_fun, json=None, s=0, e=5):
+    def show_example(cls, file_input: str, fn: callable, json=None, s=0, e=5) -> None:
         '''
         
-        :param file_input: 
+        :param fn:
+        :param file_input:
         :param process_fun: 
         :param json: 
         :param s: 
         :param e: 
         :return: 
         '''
-        reader, preprocess_fun, process_fun = cls.__preprocess__(file_input, process_fun, json)
+        reader, preprocess_fn, process_fn = cls.__preprocess__(file_input, fn, json)
         assert s <= e, f"s should >= e, but got s={s} <= e= {e}"
         assert s >= 0, f"s should >= 0 , but got s={s}"
 
@@ -186,18 +235,18 @@ class SFT:
             if i <= s:
                 continue
             print(f"##### No {i} #####")
-            print(f"== Before ==\n{preprocess_fun(item)}")
-            print(f"== After ==\n{process_fun(item)}")
+            print(f"== Before ==\n{preprocess_fn(item)}")
+            print(f"== After ==\n{process_fn(item)}")
 
     # shuffle
     @classmethod
-    def shuffle(cls, file_input, file_output):
-        '''
+    def shuffle(cls, file_input: str, file_output: str) -> None:
+        """
         shuffle: shuffle all the data in input file. warning: it loads all the data in memory
         :param file_input: input data
         :param file_output: output data
         :return:
-        '''
+        """
         reader = jsonlines.open(file_input)
         writer = jsonlines.open(file_output, mode="w")
         buffer = []
@@ -209,13 +258,32 @@ class SFT:
         writer.write_all(buffer)
         writer.close()
 
+    @classmethod
+    def sample(cls, file_input: str, file_output: str, num: int, replace=False, json=None) -> None:
+        '''
+        sample num samples from the file_input file
+        :param file_input: input file path
+        :param file_output: output sample results
+        :param num: numbers to sample
+        :param replace: whether the sample can be sampled more than one time
+        :param json: if write to json file
+        :return:
+        '''
+        reader, _, _ = cls.__preprocess__(file_input, lambda x: x, json)
+        buffer = []
+        for row in reader:
+            buffer.append(row)
+        results = F.sample(buffer, num, replace)
+        writer = cls.__rearprocess__(file_output, json)
+        cls.__save_and_clear__(writer, results, True)
+
     '''
         1.3 remove duplicate data
     '''
 
     # 基于simhash比较去重（需要两两比较，时间复杂度高，不适合百万级别以上数据）
     @classmethod
-    def remove_duplicate(cls, file_input, file_output, ratio=1, max_row_limit=1000, skip_hash=False, length=64,
+    def remove_duplicate(cls, file_input: str, file_output: str, ratio=1, max_row_limit=1000, skip_hash=False, length=64,
                          log_path="result.log"):
         '''
             remove_duplicate : remove duplicate data by sim_hash, which compares data one by one, getting more accurate and finely result but costing massive time
@@ -286,7 +354,7 @@ class SFT:
 
     # 基于simhash做布尔筛去重（粗筛，速度快，适合百万级别以上数据）
     @classmethod
-    def remove_duplicate_BloomFilter(cls, file_input, file_output, max_row_limit=1000, skip_hash=False, length=64,
+    def remove_duplicate_BloomFilter(cls, file_input: str, file_output: str, max_row_limit=1000, skip_hash=False, length=64,
                                      log_path="result.log"):
         '''
             remove_duplicate : remove duplicate data by sim_hash, which removes data by bloom filter, very fast
@@ -343,9 +411,7 @@ class SFT:
         return len_total, len_rm
 
     '''
-
-    2.For file
-
+        2.For file
     '''
 
     @classmethod
@@ -396,7 +462,7 @@ class SFT:
             cls.shuffle(file_output, file_output)
 
     @classmethod
-    def split_train_test(cls, file_input, train_test_ratio, file_train_output=None, file_test_output=None):
+    def split_train_test(cls, file_input: str, train_ratio: float, file_train_output=None, file_test_output=None):
         '''
         split_train_test: split input file data to train set and test set by the train_test_ratio
         :param file_input: input file path
@@ -411,8 +477,8 @@ class SFT:
             file_test_output = file_base_name + "_test.jsonl"
 
         reader = jsonlines.open(file_input)
-        test_writer = jsonlines.open(file_train_output, mode="w")
-        train_writer = jsonlines.open(file_test_output, mode="w")
+        test_writer = jsonlines.open(file_test_output, mode="w")
+        train_writer = jsonlines.open(file_train_output, mode="w")
 
         buffer = []
         for row in reader:
@@ -422,7 +488,7 @@ class SFT:
         # shuffle
         random.shuffle(buffer)
         # count length
-        train_len = int(row_num * train_test_ratio)
+        train_len = int(row_num * train_ratio)
         # split
         train_buffer = buffer[:train_len]
         test_buffer = buffer[train_len:]
@@ -436,20 +502,21 @@ class SFT:
 
 class F:
     @classmethod
-    def rename(cls, row, mapping: dict[str:str]) -> None:
+    def rename(cls, row: dict[str:str], mapping: dict[str:str]) -> None:
         for old_k, new_k in mapping.items():
             if old_k in row:
                 row[new_k] = row.pop(old_k)
 
     @classmethod
-    def replace(cls, row, pattern, repl, property=None) -> None:
+    def replace(cls, row: dict[str:str], pattern: str, repl: str, property=None) -> None:
         if property is None:
             property = row.keys()
 
         for k in property:
             row[k] = re.sub(pattern, repl, row[k])
+
     @classmethod
-    def get_length(cls, row, property=None) -> int:
+    def len(cls, row: dict[str:str], property=None) -> int:
         '''
         get length of the json
         :param row:
@@ -464,8 +531,9 @@ class F:
                 if k in property:
                     item += v
         return len(item)
+
     @classmethod
-    def get_count(cls, file_input):
+    def count(cls, file_input: str) -> int:
         """
         get the sample number of a file
         :param file_input:
@@ -484,10 +552,28 @@ class F:
             reader = open(file_input, mode="r")
 
         num = 0
-        for row in reader:
+        for _ in reader:
             num += 1
         reader.close()
         return num
+
+    @classmethod
+    def sample(cls, items, num, replace=False, random_seed=666):
+        '''
+        sample num items from items
+        :param random_seed:
+        :param items: datas
+        :param num: nums of datas
+        :param replace: default=False(without replacement) sampling with replacement or not
+        :return:
+        '''
+        random.seed(random_seed)
+        if not replace:
+            results = random.sample(items, num)
+        else:
+            results = random.choices(items, num)
+        return results
+
 
 class PT:
     @classmethod
@@ -512,7 +598,7 @@ class PT:
     @classmethod
     def parse_pages(cls, files, process_fun, output_dir):
         '''
-        parse the semi structure json and parse all the token needed together fot PT
+        parse the semi structure json and parse all the token needed together for PT
         :param files:
         :param process_fun:
         :param output_dir:
@@ -545,6 +631,7 @@ class PT:
         :param max_limit_num:
         :return:
         '''
+
         # 按长度切分列表
         def split_list_by_length(lst, length):
             return [lst[i:i + length] for i in range(0, len(lst), length)]
@@ -590,4 +677,3 @@ class PT:
 
         with open(file_test_output, mode="w") as writer2:
             writer2.writelines(test_buffer)
-
